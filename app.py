@@ -50,51 +50,58 @@ with tab1:
     end_date = st.date_input("Select the ending date", value=(datetime.now() - timedelta(days=1)).date(),
                              max_value=(datetime.now() - timedelta(days=1)).date())
 
-    if st.button("Process Data"):
-        with st.spinner('In Process....'):
+        if st.button("Process Data"):
+        # Check if start date and end date are the same
+        if start_date == end_date:
+            st.error("Start date and end date must be different.")
+        # Check if end date is before start date
+        elif end_date < start_date:
+            st.error("The end date cannot be earlier than the start date.")
+        else:
+            with st.spinner('In Process....'):
 
-            start_date_formatted = pd.to_datetime(start_date).strftime('%Y-%m-%d')
-            end_date_formatted = pd.to_datetime(end_date).strftime('%Y-%m-%d')
+                start_date_formatted = pd.to_datetime(start_date).strftime('%Y-%m-%d')
+                end_date_formatted = pd.to_datetime(end_date).strftime('%Y-%m-%d')
 
-            nse_trading_days = get_nse_trading_days(start_date_formatted, end_date_formatted)
-            print(nse_trading_days)
-            save_trading_days_to_csv(nse_trading_days)
+                nse_trading_days = get_nse_trading_days(start_date_formatted, end_date_formatted)
+                print(nse_trading_days)
+                save_trading_days_to_csv(nse_trading_days)
 
-            cue_read = pd.read_csv("CUE_DATE.csv")
-            i = 0
+                cue_read = pd.read_csv("CUE_DATE.csv")
+                i = 0
 
-            while i < len(cue_read):
-                Tdate = cue_read['details'].iat[i]
-                result = process_date(Tdate, start_date.year)
+                while i < len(cue_read):
+                    Tdate = cue_read['details'].iat[i]
+                    result = process_date(Tdate, start_date.year)
 
-                if result is None:
-                    cue_read = cue_read.drop(index=i).reset_index(drop=True)
-                    cue_read.to_csv("CUE_DATE.csv", index=False)
-                    print(f"Removed unavailable date: {Tdate} from CUE_DATE.csv")
-                else:
-                    print(f"Data processed successfully for date: {Tdate}")
-                    i += 1
+                    if result is None:
+                        cue_read = cue_read.drop(index=i).reset_index(drop=True)
+                        cue_read.to_csv("CUE_DATE.csv", index=False)
+                        print(f"Removed unavailable date: {Tdate} from CUE_DATE.csv")
+                    else:
+                        print(f"Data processed successfully for date: {Tdate}")
+                        i += 1
 
-            directory = "nse_eod_data_files"
-            if not os.path.exists(directory):
-                os.makedirs(directory)
-            all_data = []
-            for filename in os.listdir(directory):
-                if filename.startswith("Pd"):
-                    file_path = os.path.join(directory, filename)
-                    df = process_file(file_path)
-                    all_data.append(df)
+                directory = "nse_eod_data_files"
+                if not os.path.exists(directory):
+                    os.makedirs(directory)
+                all_data = []
+                for filename in os.listdir(directory):
+                    if filename.startswith("Pd"):
+                        file_path = os.path.join(directory, filename)
+                        df = process_file(file_path)
+                        all_data.append(df)
 
-            final_df = pd.concat(all_data)
-            final_df.to_csv(f"EOD_DATA_FOR_ANALYSIS.csv", index=False)
+                final_df = pd.concat(all_data)
+                final_df.to_csv(f"EOD_DATA_FOR_ANALYSIS.csv", index=False)
 
-            # Analysis part
-            path = r'EOD_DATA_FOR_ANALYSIS.csv'  # Path to the original CSV file
-            dfs = pd.read_csv(path)
+                # Analysis part
+                path = r'EOD_DATA_FOR_ANALYSIS.csv'  # Path to the original CSV file
+                dfs = pd.read_csv(path)
 
-            # Call the data processing function
-            process_data(dfs)
-
+                # Call the data processing function
+                process_data(dfs)
+                
 # Classic Pivot Tab
 with tab2:
     summary()
