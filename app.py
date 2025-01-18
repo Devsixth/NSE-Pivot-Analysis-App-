@@ -50,7 +50,7 @@ with tab1:
     end_date = st.date_input("Select the ending date", value=(datetime.now() - timedelta(days=1)).date(),
                              max_value=(datetime.now() - timedelta(days=1)).date())
 
-        if st.button("Process Data"):
+    if st.button("Process Data"):
         # Check if start date and end date are the same
         if start_date == end_date:
             st.error("Start date and end date must be different.")
